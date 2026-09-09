@@ -1,40 +1,31 @@
 <!DOCTYPE html>
-<html><head><title>LogVeda Pro - Cyber Scanner</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-</head>
+<html><head><title>LogVeda PRO V3</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"></head>
 <body class="bg-[#0a0a0a] text-white">
-<nav class="border-b border-white/10 p-4 flex justify-between"><h1 class="text-xl font-bold"><i class="fa-solid fa-shield-halved text-green-400"></i> LogVeda PRO</h1><span class="text-xs bg-green-400/10 text-green-400 px-3 py-1 rounded-full">BETA LIVE</span></nav>
-<div class="max-w-6xl mx-auto p-6 grid md:grid-cols-3 gap-6">
-<div class="md:col-span-2">
+<nav class="border-b border-white/10 p-4 flex justify-between"><h1 class="font-bold"><i class="fa-solid fa-shield-halved text-green-400"></i> LogVeda PRO V3</h1></nav>
+<div class="max-w-6xl mx-auto p-6">
 <div class="bg-[#151515] border border-white/10 rounded-xl p-6">
 <h2 class="text-2xl font-bold">Website Vulnerability Scanner</h2>
-<p class="text-gray-400 text-sm mt-1">Apni website ka security audit 30 sec me karo.</p>
-<div class="flex gap-2 mt-6"><input id="domain" class="flex-1 bg-black border border-white/20 p-3 rounded-lg" placeholder="example.com"><button onclick="scanDomain()" class="bg-white text-black px-6 py-3 rounded-lg font-bold">Scan Now <i class="fa-solid fa-bolt"></i></button></div>
-<div id="scanResult" class="mt-6 space-y-3"></div>
-</div>
-</div>
-<div class="bg-[#151515] border border-white/10 rounded-xl p-6">
-<h3 class="font-bold"><i class="fa-solid fa-file-lines"></i> Log Analyzer</h3>
-<p class="text-xs text-gray-400 mt-1">Apache / Nginx log upload karo</p>
-<input type="file" id="logfile" class="mt-4 text-xs">
-<button onclick="uploadLog()" class="w-full mt-3 bg-green-400 text-black py-2 rounded-lg font-bold">Analyze Logs</button>
-<div id="logResult" class="mt-4 text-xs h-[400px] overflow-auto space-y-2"></div>
+<div class="flex gap-2 mt-6"><input id="domain" class="flex-1 bg-black border border-white/20 p-3 rounded-lg" placeholder="https://example.com"><button onclick="scanDomain()" class="bg-white text-black px-6 py-3 rounded-lg font-bold">Scan Now</button></div>
+<div id="scanResult" class="mt-6 space-y-4"></div>
 </div>
 </div>
 <script>
-function badge(l){ if(l=='Critical') return 'bg-red-500'; if(l=='High') return 'bg-orange-500'; if(l=='Medium') return 'bg-yellow-500 text-black'; return 'bg-white/10'; }
+function badge(l){ if(l=='Critical') return 'bg-red-500'; if(l=='Medium') return 'bg-yellow-500 text-black'; return 'bg-white/20'; }
 async function scanDomain(){
- document.getElementById('scanResult').innerHTML='<p class="text-gray-400 animate-pulse">Scanning... SSL, Headers, Files check ho rahe hain</p>';
+ document.getElementById('scanResult').innerHTML='<p class="animate-pulse">Deep scanning with evidence collection...</p>';
  let d=document.getElementById('domain').value;
  let r=await fetch('/scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({domain:d})});
  let data=await r.json();
- document.getElementById('scanResult').innerHTML=data.map(x=>`<div class="bg-black/50 p-3 rounded-lg border border-white/5 flex justify-between"><div><p class="font-bold text-sm">${x.title}</p><p class="text-xs text-gray-400">${x.msg}</p></div><span class="h-fit text-[10px] px-2 py-1 rounded ${badge(x.level)}">${x.level}</span></div>`).join('');
-}
-async function uploadLog(){
- let f=document.getElementById('logfile').files[0]; if(!f) return alert('File select karo');
- let fd=new FormData(); fd.append('logfile',f);
- let r=await fetch('/logscan',{method:'POST',body:fd}); let data=await r.json();
- document.getElementById('logResult').innerHTML=data.map(x=>`<div class="p-2 bg-black rounded border-l-2 border-red-500"><b class="text-red-400">${x.attack}</b> L:${x.line}<br><span class="text-gray-400 break-all">${x.log}</span></div>`).join('')||'<p class="text-green-400">No threats found - Clean!</p>';
+ document.getElementById('scanResult').innerHTML=data.map(x=>`
+ <div class="bg-black border border-white/10 rounded-lg p-4">
+  <div class="flex justify-between"><p class="font-bold"><i class="fa-solid fa-bug"></i> ${x.title}</p><span class="text-[10px] px-2 py-1 rounded ${badge(x.level)}">${x.level}</span></div>
+  <p class="text-xs mt-2 text-gray-400"><i class="fa-solid fa-location-dot"></i> <b>Location:</b> ${x.location}</p>
+  <div class="mt-2 bg-[#1a1a1a] p-2 rounded text-[11px] text-green-300 overflow-auto"><b>Evidence:</b><br>${x.evidence}</div>
+  <p class="text-xs mt-2 text-blue-300"><b>Fix:</b> ${x.fix}</p>
+  <div class="mt-3 flex gap-2">
+    <a href="${x.poc_url}" target="_blank" class="text-xs bg-white text-black px-3 py-1 rounded font-bold"><i class="fa-solid fa-up-right-from-square"></i> Open Location</a>
+    <a href="${x.url}" target="_blank" class="text-xs border border-white/20 px-3 py-1 rounded">View Source</a>
+  </div>
+ </div>`).join('');
 }
 </script></body></html>
