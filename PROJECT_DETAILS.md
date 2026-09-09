@@ -10,4 +10,4 @@ Features Built:
 
 Current Hosting: Render.com, Build: pip install -r requirements.txt, Start: gunicorn app:app
 
-When asking for changes, tell Meta AI: "Ye mera LogVeda PRO V3 project hai"
+
