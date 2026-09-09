@@ -1,31 +1,63 @@
-<!DOCTYPE html>
-<html><head><title>LogVeda PRO V3</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"></head>
-<body class="bg-[#0a0a0a] text-white">
-<nav class="border-b border-white/10 p-4 flex justify-between"><h1 class="font-bold"><i class="fa-solid fa-shield-halved text-green-400"></i> LogVeda PRO V3</h1></nav>
-<div class="max-w-6xl mx-auto p-6">
-<div class="bg-[#151515] border border-white/10 rounded-xl p-6">
-<h2 class="text-2xl font-bold">Website Vulnerability Scanner</h2>
-<div class="flex gap-2 mt-6"><input id="domain" class="flex-1 bg-black border border-white/20 p-3 rounded-lg" placeholder="https://example.com"><button onclick="scanDomain()" class="bg-white text-black px-6 py-3 rounded-lg font-bold">Scan Now</button></div>
-<div id="scanResult" class="mt-6 space-y-4"></div>
+<!DOCTYPE html><html><head><title>LogVeda PRO</title><script src="https://cdn.tailwindcss.com"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"></head>
+<body class="bg-[#080808] text-white font-sans">
+<nav class="border-b border-white/10 sticky top-0 bg-black/80 backdrop-blur z-50"><div class="max-w-7xl mx-auto p-4 flex justify-between items-center"><h1 class="text-xl font-black tracking-widest"><span class="text-green-400">LOG</span>VEDA PRO</h1><div class="text-[10px] text-gray-400">Professional Security Suite</div></div></nav>
+
+<div class="max-w-7xl mx-auto p-4 md:p-8">
+<div class="bg-[#121212] border border-white/10 rounded-2xl p-6">
+<div class="flex flex-col md:flex-row gap-3"><input id="domain" class="flex-1 bg-black border border-white/20 p-4 rounded-xl" placeholder="https://example.com"><button onclick="scanDomain()" class="bg-white text-black px-8 py-4 rounded-xl font-black">SCAN <i class="fa-solid fa-bolt"></i></button></div>
+<div id="domainCard" class="hidden mt-6 grid md:grid-cols-3 gap-4"></div>
+<div class="flex gap-2 mt-6 items-center"><span class="text-xs text-gray-400">Filter:</span><button onclick="filterB('ALL')" class="filter-btn bg-white text-black px-3 py-1 rounded text-xs">All</button><button onclick="filterB('Critical')" class="filter-btn border border-white/20 px-3 py-1 rounded text-xs">Critical</button><button onclick="filterB('High')" class="filter-btn border border-white/20 px-3 py-1 rounded text-xs">High</button><button onclick="filterB('Medium')" class="filter-btn border border-white/20 px-3 py-1 rounded text-xs">Medium</button><button onclick="filterB('Low')" class="filter-btn border border-white/20 px-3 py-1 rounded text-xs">Low</button><a href="/download_report" class="ml-auto text-xs bg-green-500 text-black px-4 py-2 rounded font-bold"><i class="fa-solid fa-download"></i> Download Report</a></div>
+<div id="scanResult" class="mt-6 space-y-3"></div>
+<div id="seeMoreDiv" class="hidden text-center mt-4"><button onclick="showLow()" class="border border-white/20 px-6 py-2 rounded-full text-xs">See More Low Risk Bugs <i class="fa-solid fa-chevron-down"></i></button></div>
 </div>
+
+<div class="mt-10 bg-[#121212] border border-white/10 rounded-2xl p-6"><h3 class="font-bold mb-4">Log Forensics</h3><input type="file" id="logfile" class="text-xs"><button onclick="scanLogs()" class="ml-2 bg-white/10 border border-white/20 px-4 py-2 rounded text-xs">Analyze Logs</button><div id="logResult" class="mt-4"></div></div>
 </div>
+
+<footer class="border-t border-white/10 mt-16 p-8 text-center text-[11px] text-gray-500"><p>© 2026 LogVeda PRO | Built by Amit Chauhan | Professional Ethical Hacking Toolkit</p><p class="mt-2">For Educational & Authorized Testing Only</p></footer>
+
+<div id="modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur flex items-center justify-center z-[100] p-4"><div class="bg-[#1a1a1a] border border-white/20 rounded-2xl p-6 max-w-2xl w-full"><div class="flex justify-between"><h2 id="mTitle" class="font-bold"></h2><button onclick="closeM()" class="text-gray-400"><i class="fa-solid fa-xmark"></i></button></div><p id="mLoc" class="text-xs text-gray-400 mt-2"></p><div class="bg-black p-3 rounded mt-4 text-[11px] text-green-300 overflow-auto max-h-40" id="mEv"></div><div class="mt-4 bg-blue-500/10 border border-blue-500/20 p-3 rounded text-xs"><b class="text-blue-300">How to Fix:</b><p id="mFix" class="mt-1 text-gray-300"></p></div><a id="mLink" target="_blank" class="mt-4 block text-center bg-white text-black py-3 rounded-xl font-bold text-sm">Open Vulnerable Location <i class="fa-solid fa-up-right-from-square"></i></a></div></div>
+
 <script>
-function badge(l){ if(l=='Critical') return 'bg-red-500'; if(l=='Medium') return 'bg-yellow-500 text-black'; return 'bg-white/20'; }
+let allFindings=[], showLowFlag=false;
+function filterB(lvl){
+ document.querySelectorAll('.filter-btn').forEach(b=>b.className='filter-btn border border-white/20 px-3 py-1 rounded text-xs');
+ event.target.className='filter-btn bg-white text-black px-3 py-1 rounded text-xs';
+ renderFindings(lvl);
+}
+function renderFindings(filter='ALL'){
+ let cont=document.getElementById('scanResult'); cont.innerHTML='';
+ let filtered = allFindings.filter(f=>{
+  if(filter!=='ALL' && f.level!==filter) return false;
+  if(!showLowFlag && f.level==='Low') return false;
+  return true;
+ });
+ if(allFindings.some(f=>f.level==='Low') &&!showLowFlag) document.getElementById('seeMoreDiv').classList.remove('hidden'); else document.getElementById('seeMoreDiv').classList.add('hidden');
+ cont.innerHTML=filtered.map((x,i)=>`
+ <div onclick="openM(${allFindings.indexOf(x)})" class="bg-black border border-white/10 hover:border-white/20 rounded-xl p-4 cursor-pointer flex justify-between items-center">
+  <div><p class="font-bold text-sm"><i class="fa-solid fa-triangle-exclamation text-${x.level==='Critical'?'red':'yellow'}-400"></i> ${x.title}</p><p class="text-[11px] text-gray-500 mt-1">${x.location}</p></div>
+  <span class="text-[10px] px-2 py-1 rounded ${x.level==='Critical'?'bg-red-500':x.level==='High'?'bg-orange-500':x.level==='Medium'?'bg-yellow-500 text-black':'bg-white/10'}">${x.level}</span>
+ </div>`).join('') || '<p class="text-xs text-gray-500">No findings for this filter.</p>';
+}
+function openM(idx){ let x=allFindings[idx]; document.getElementById('mTitle').innerText=x.title; document.getElementById('mLoc').innerText='Location: '+x.location; document.getElementById('mEv').innerText=x.evidence; document.getElementById('mFix').innerText=x.fix; document.getElementById('mLink').href=x.url; document.getElementById('modal').classList.remove('hidden'); }
+function closeM(){ document.getElementById('modal').classList.add('hidden'); }
+function showLow(){ showLowFlag=true; renderFindings(); }
 async function scanDomain(){
- document.getElementById('scanResult').innerHTML='<p class="animate-pulse">Deep scanning with evidence collection...</p>';
+ document.getElementById('scanResult').innerHTML='<p class="animate-pulse text-sm">Scanning domain, fetching WHOIS, hosting & location...</p>';
  let d=document.getElementById('domain').value;
  let r=await fetch('/scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({domain:d})});
- let data=await r.json();
- document.getElementById('scanResult').innerHTML=data.map(x=>`
- <div class="bg-black border border-white/10 rounded-lg p-4">
-  <div class="flex justify-between"><p class="font-bold"><i class="fa-solid fa-bug"></i> ${x.title}</p><span class="text-[10px] px-2 py-1 rounded ${badge(x.level)}">${x.level}</span></div>
-  <p class="text-xs mt-2 text-gray-400"><i class="fa-solid fa-location-dot"></i> <b>Location:</b> ${x.location}</p>
-  <div class="mt-2 bg-[#1a1a1a] p-2 rounded text-[11px] text-green-300 overflow-auto"><b>Evidence:</b><br>${x.evidence}</div>
-  <p class="text-xs mt-2 text-blue-300"><b>Fix:</b> ${x.fix}</p>
-  <div class="mt-3 flex gap-2">
-    <a href="${x.poc_url}" target="_blank" class="text-xs bg-white text-black px-3 py-1 rounded font-bold"><i class="fa-solid fa-up-right-from-square"></i> Open Location</a>
-    <a href="${x.url}" target="_blank" class="text-xs border border-white/20 px-3 py-1 rounded">View Source</a>
-  </div>
- </div>`).join('');
+ let data=await r.json(); allFindings=data.findings; showLowFlag=false;
+ let info=data.domain_info;
+ document.getElementById('domainCard').classList.remove('hidden');
+ document.getElementById('domainCard').innerHTML=`
+ <div class="bg-black border border-white/10 rounded-xl p-4"><p class="text-[10px] text-gray-500">HOSTING / SERVER</p><p class="font-bold mt-1">${info.hosting}</p><p class="text-xs text-gray-400">IP: ${info.ip} | ${data.server}</p></div>
+ <div class="bg-black border border-white/10 rounded-xl p-4"><p class="text-[10px] text-gray-500">DOMAIN INFO</p><p class="text-xs mt-1">Registrar: ${info.registrar}</p><p class="text-xs">Company: ${info.company}</p><p class="text-xs">Expiry: ${info.expiry}</p><p class="text-xs">Created: ${info.creation}</p></div>
+ <div class="bg-black border border-white/10 rounded-xl p-4"><p class="text-[10px] text-gray-500">SERVER LOCATION</p><p class="font-bold mt-1">${info.country}</p><a href="${info.map_url}" target="_blank" class="mt-2 inline-block text-xs bg-white text-black px-3 py-1 rounded font-bold"><i class="fa-solid fa-map-location-dot"></i> View on Map</a></div>`;
+ renderFindings();
+}
+async function scanLogs(){
+ let fd=new FormData(); fd.append('logfile', document.getElementById('logfile').files[0]);
+ let r=await fetch('/logscan',{method:'POST',body:fd}); let d=await r.json();
+ document.getElementById('logResult').innerHTML=d.map(x=>`<div onclick="alert('IP: ${x.ip}\\nLog: ${x.log}\\nFix: Block this IP in firewall and check for SQLi/XSS payloads')" class="bg-black border border-white/10 p-3 rounded-lg mt-2 text-xs cursor-pointer"><b>Line ${x.line}</b> - ${x.attack} [${x.ip}] - Click for details</div>`).join('');
 }
 </script></body></html>
