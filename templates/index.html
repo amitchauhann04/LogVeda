@@ -1,1 +1,23 @@
-
+<!DOCTYPE html>
+<html><head><title>LogVeda</title><script src="https://cdn.tailwindcss.com"></script></head>
+<body class="bg-black text-green-400 p-6 font-mono">
+<h1 class="text-3xl font-bold">LogVeda - Bug Khoji</h1>
+<input id="domain" class="w-full mt-4 p-2 text-black" placeholder="example.com">
+<button onclick="scanDomain()" class="bg-green-400 text-black px-4 py-2 mt-2">SCAN</button>
+<div id="scanResult" class="mt-4"></div>
+<hr class="my-6">
+<input type="file" id="logfile"><button onclick="uploadLog()" class="bg-green-400 text-black px-4 py-2">ANALYZE LOG</button>
+<div id="logResult" class="mt-4 h-64 overflow-auto"></div>
+<script>
+async function scanDomain(){
+ let d=document.getElementById('domain').value;
+ let r=await fetch('/scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({domain:d})});
+ let data=await r.json();
+ document.getElementById('scanResult').innerHTML=data.map(x=>`[${x.level}] ${x.msg}`).join('<br>');
+}
+async function uploadLog(){
+ let f=document.getElementById('logfile').files[0]; let fd=new FormData(); fd.append('logfile',f);
+ let r=await fetch('/logscan',{method:'POST',body:fd}); let data=await r.json();
+ document.getElementById('logResult').innerHTML=data.map(x=>`${x.attack} line ${x.line}: ${x.log}`).join('<br>')||"Clean";
+}
+</script></body></html>
