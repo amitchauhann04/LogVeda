@@ -1,4 +1,4 @@
-# LogVeda PRO V3 - My Project
+# LogVeda PRO - My Project
 Owner: Amit Chauhan
 Tech: Python Flask, HTML, Tailwind CSS, Render.com Hosting
 Repo: amitchauhann04/LogVeda
